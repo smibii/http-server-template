@@ -1,0 +1,35 @@
+{
+  "name": "http-server-template",
+  "version": "0.0.0",
+  "description": "HTTP Server template",
+  "author": {
+    "name": "SMIBII",
+    "url": "https://smibii.com"
+  },
+  "license": "MIT",
+  "scripts": {
+    "start": "set \"NODE_ENV=development\" && nodemon --watch 'src/**/*.ts' --ignore 'src/client.ts' --exec npx ts-node -r tsconfig-paths/register src/core/server.ts",
+    "start:build": "npm run build && cd build && node build/core/server.js",
+    "build": "set \"NODE_ENV=production\" && tsc -p . && tsc-alias"
+  },
+  "dependencies": {
+    "@types/deasync": "^0.1.5",
+    "cheerio": "^1.1.0",
+    "deasync": "^0.1.30",
+    "dotenv": "^6.2.0",
+    "pathlib": "^0.1.2",
+    "winston": "^3.1.0"
+  },
+  "devDependencies": {
+    "@types/cheerio": "^0.22.35",
+    "@types/dotenv": "^6.1.0",
+    "@types/node": "^20.0.0",
+    "@types/winston": "^2.4.4",
+    "nodemon": "^1.18.9",
+    "ts-node": "^7.0.1",
+    "tsc-alias": "^1.8.16",
+    "tsconfig-paths": "^4.2.0",
+    "tslint": "^5.12.0",
+    "typescript": "^5.8.3"
+  }
+}

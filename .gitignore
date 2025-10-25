@@ -1,0 +1,9 @@
+.idea
+.vscode
+build
+node_modules
+logs
+.env
+package-lock.json
+.DS_Store
+Thumbs.db
