@@ -1,8 +1,8 @@
 import http from "http";
-import { logger } from "./app";
+import { logger } from "../app";
 import fs from "fs";
 
-export function createHeader(res: http.ServerResponse, code: number = 200, headers?: http.OutgoingHttpHeaders | http.OutgoingHttpHeader[]): void {
+function createHeader(res: http.ServerResponse, code: number = 200, headers?: http.OutgoingHttpHeaders | http.OutgoingHttpHeader[]): void {
   res.writeHead(code, {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -11,7 +11,7 @@ export function createHeader(res: http.ServerResponse, code: number = 200, heade
   });
 }
 
-export function sendJson(res: http.ServerResponse, data: any, code: number = 200): void {
+function sendJson(res: http.ServerResponse, data: any, code: number = 200): void {
   if (typeof data !== "object") {
     logger.error("Data to send is not an object. Converting to JSON.");
     data = { message: data };
@@ -21,16 +21,16 @@ export function sendJson(res: http.ServerResponse, data: any, code: number = 200
   res.end(JSON.stringify(data));
 }
 
-export function result(res: http.ServerResponse, data: any, code: number = 200): void {
-  sendJson(res, { data: data, success: code === 200 }, code);
+function result(res: http.ServerResponse, data: any, code: number = 200): void {
+  sendJson(res, data, code);
 }
 
-export function error(res: http.ServerResponse, message: string, code: number = 400): void {
+function error(res: http.ServerResponse, message: string, code: number = 400): void {
   logger.error(`Error: ${message}`);
-  result(res, "error/" + message, code);
+  result(res, {message, error: true}, code);
 }
 
-export function sendFile(res: http.ServerResponse, filePath: string, contentType: string = null): void {
+function sendFile(res: http.ServerResponse, filePath: string, contentType: string = null): void {
   fs.readFile(filePath, (err: NodeJS.ErrnoException | null, data: Buffer) => {
     if (err) {
       logger.error(`Error reading file ${filePath}: ${err.message}`);
@@ -44,3 +44,11 @@ export function sendFile(res: http.ServerResponse, filePath: string, contentType
     }
   });
 }
+
+export default {
+  createHeader,
+  sendJson,
+  result,
+  error,
+  sendFile
+};

@@ -1,6 +1,6 @@
+import response from "core/utils/response";
 import http from "http";
-import { error } from "core/response";
-import { isDevelopment } from "utils/const";
+import { isDevelopment } from "core/utils/const";
 
 export type Methods = "GET" | "POST" | "PUT" | "DELETE" | "OPTIONS";
 export type DataShape = Record<string, string>;
@@ -13,7 +13,7 @@ export async function fetchData(
   optionalData: DataShape = {}
 ): Promise<Data> {
   if (req.headers["content-type"] !== "application/json") {
-    error(res, "Content-Type must be application/json");
+    response.error(res, "Content-Type must be application/json");
     throw new Error("Invalid Content-Type");
   }
 
@@ -35,14 +35,14 @@ export async function fetchData(
 
         if (value === undefined) {
           if (isRequired) {
-            error(res, `Missing required key: ${key}`);
+            response.error(res, `Missing required key: ${key}`);
             throw new Error(`Missing required key: ${key}`);
           }
           continue;
         }
 
         if (typeof value !== expectedType) {
-          error(
+          response.error(
             res,
             `${isRequired ? "Required" : "Optional"} key '${key}' has invalid type (${typeof value}); expected (${expectedType})`
           );
@@ -59,7 +59,7 @@ export async function fetchData(
     return result;
   } catch (err) {
     if (err instanceof SyntaxError) {
-      error(res, "Invalid JSON body");
+      response.error(res, "Invalid JSON body");
     }
     throw err;
   }
@@ -68,16 +68,19 @@ export async function fetchData(
 export type AccesspointOptions = {
   local: string | RegExp;
   prod: string | RegExp;
+  ignoreUrls?: string[];
 };
 
 export class Accesspoint {
   public local: string | RegExp;
   public prod: string | RegExp;
   public endpoints: Map<Methods, Endpoint[]> = new Map();
+  public ignoreUrls: string[];
 
   constructor(options: AccesspointOptions) {
     this.local = options.local;
     this.prod = options.prod;
+    this.ignoreUrls = options.ignoreUrls || [];
   }
 
   public addEndpoint(endpoint: Endpoint) {
@@ -132,5 +135,15 @@ export class Endpoint {
     this.requiredData = options.requiredData || {};
     this.optionalData = options.optionalData || {};
     this.noData = options.noData || false;
+  }
+
+  public async extractData(
+    req: http.IncomingMessage,
+    res: http.ServerResponse
+  ): Promise<Data> {
+    if (this.noData) {
+      return {};
+    }
+    return await fetchData(req, res, this.requiredData, this.optionalData);
   }
 }

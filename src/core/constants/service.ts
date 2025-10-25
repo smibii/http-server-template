@@ -6,10 +6,8 @@ export const serviceConstants = {
     },
     "server": {
         "port": {
-            "http": {
-                "local": 3002,
-                "production": 80
-            }
+            "local": 3002,
+            "production": 80
         }
     }
 };

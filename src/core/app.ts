@@ -1,4 +1,4 @@
-import { serviceConstants } from "constants/service";
+import { serviceConstants } from "core/constants/service";
 import dotenv from "dotenv";
 import winston from "winston";
 

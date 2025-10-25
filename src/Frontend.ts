@@ -1,20 +1,20 @@
-import { Accesspoint, Endpoint } from "utils/accesspoint";
+import { Accesspoint, Endpoint } from "core/utils/accesspoint";
 import path from "path";
-import { sendFile } from "core/response";
+import response from "core/utils/response";
 
 const publicDir = path.join(__dirname, "../public");
 const indexFile = path.join(publicDir, "index.html");
 
 export function register(): Accesspoint {
-    const frontendAP = new Accesspoint({
-        local: /.*/,
+    const ap = new Accesspoint({
+        local: "/",
         prod: null
     });
 
-    frontendAP.addEndpoint(
+    ap.addEndpoint(
         new Endpoint({
             method: "GET",
-            endpoint: /^\/.*\.[^/]+$/,
+            endpoint: /^.*\..+$/,
             noData: true,
             handler(req, res, data) {
                 const url = req.url || "/";
@@ -33,21 +33,21 @@ export function register(): Accesspoint {
                     default: contentType = "application/octet-stream";
                 }
 
-                sendFile(res, filePath, contentType);
+                response.sendFile(res, filePath, contentType);
             }
         })
     );
 
-    frontendAP.addEndpoint(
+    ap.addEndpoint(
         new Endpoint({
             method: "GET",
             endpoint: /.*/,
             noData: true,
             handler(req, res, data) {
-                sendFile(res, indexFile, "text/html");
+                response.sendFile(res, indexFile, "text/html");
             }
         })
     );
 
-  return frontendAP;
+    return ap;
 }

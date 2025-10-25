@@ -1,13 +1,13 @@
 import http from "http";
 import os from "os";
 import { logger } from "core/app";
-import { sendJson, createHeader, error } from "core/response";
-import { getConst } from "utils/const";
-import { serviceConstants } from "constants/service";
+import response from "core/utils/response";
+import { getConst, isDevelopment } from "core/utils/const";
+import { serviceConstants } from "core/constants/service";
 import * as registry from "registy";
-import { Accesspoint, Data, Endpoint, fetchData, Methods } from "utils/accesspoint";
+import { Accesspoint, Data, Endpoint, Methods } from "core/utils/accesspoint";
 
-const port: number = getConst<number>(serviceConstants.server.port.http);
+const port: number = getConst<number>(serviceConstants.server.port);
 const httpServer = http.createServer();
 
 httpServer.listen(port, () => {
@@ -30,7 +30,7 @@ httpServer.listen(port, () => {
   }
 
   logger.info(`Registering access points...`);
-  registry.register();
+  registry.registerAll();
 
   logger.info(`Server started at http://${localIp}:${port}`);
 });
@@ -43,7 +43,7 @@ httpServer.on("request", (req: http.IncomingMessage, res: http.ServerResponse): 
   logger.info(`Received ${method} request from ${ip} with User-Agent: ${userAgent} for URL: ${req.url?.toLowerCase()}`);
 
   if (method === "OPTIONS") {
-    createHeader(res, 204);
+    response.createHeader(res, 204);
     res.end();
     return;
   }
@@ -54,7 +54,7 @@ httpServer.on("request", (req: http.IncomingMessage, res: http.ServerResponse): 
   }
 
   logger.warn(`Unsupported method: ${method}`);
-  sendJson(res, { error: "Method not allowed" }, 405);
+  response.sendJson(res, { error: "Method not allowed" }, 405);
   return;
 });
 
@@ -104,29 +104,49 @@ export async function handleRequest(
   res: http.ServerResponse
 ): Promise<void> {
   try {
-    const url = (req.url || "/").split("?")[0].toLowerCase();
+    let url = (req.url || "/").split("?")[0].toLowerCase();
     const method = req.method as Methods;
     const host = req.headers.host || "";
     const subDomain = host.split(".")[0];
+
+    console.log(url)
 
     let matchedAccesspoint: Accesspoint | null = null;
     let matchedEndpoint: Endpoint | null = null;
     let data: Data = {};
 
     for (const accesspoint of registry.registry) {
+      for (const ignoredUrl of accesspoint.ignoreUrls) {
+        if (url.startsWith(ignoredUrl)) {
+          return null;
+        }
+      }
+
       const subdomainMatch =
         !accesspoint.prod || accesspoint.prod === "" ||
         (accesspoint.prod instanceof RegExp
           ? accesspoint.prod.test(subDomain)
           : accesspoint.prod === subDomain);
 
-      const urlMatch =
-        !accesspoint.local || accesspoint.local === "" ||
-        (accesspoint.local instanceof RegExp
-          ? accesspoint.local.test(url)
-          : accesspoint.local === url);
+      let urlMatch: boolean;
+      let matchedPrefix = "";
 
-      if (!subdomainMatch || !urlMatch) continue;
+      if (!accesspoint.local || accesspoint.local === "") {
+        urlMatch = true;
+      } else if (accesspoint.local instanceof RegExp) {
+        const match = url.match(accesspoint.local);
+        urlMatch = !!match;
+        if (match) matchedPrefix = match[0];
+      } else {
+        urlMatch = url.startsWith(accesspoint.local);
+        if (urlMatch) matchedPrefix = accesspoint.local;
+      }
+
+      if (!subdomainMatch && !urlMatch) continue;
+
+      if (urlMatch && isDevelopment && matchedPrefix) {
+        url = url.slice(matchedPrefix.length) || "/";
+      }
 
       const endpoints = accesspoint.endpoints.get(method) || [];
       const match = matchEndpoint(endpoints, url);
@@ -140,20 +160,15 @@ export async function handleRequest(
     }
 
     if (!matchedAccesspoint || !matchedEndpoint) {
-      return error(res, "invalid_route", 401);
+      return response.error(res, "invalid_route", 401);
     }
 
     if (!matchedEndpoint.noData) {
       if (req.headers["content-type"] !== "application/json") {
-        return error(res, "Content-Type must be application/json", 415);
+        return response.error(res, "Content-Type must be application/json", 415);
       }
 
-      const fetchedData = await fetchData(
-        req,
-        res,
-        matchedEndpoint.requiredData,
-        matchedEndpoint.optionalData
-      );
+      const fetchedData = await matchedEndpoint.extractData(req, res);
       data = { ...data, ...fetchedData };
     }
 
@@ -163,6 +178,6 @@ export async function handleRequest(
     await matchedEndpoint.handler(req, res, data);
   } catch (err) {
     logger.error(`Error handling request: ${(err as Error).message}`);
-    error(res, "internal_server_error", 500);
+    response.error(res, "internal_server_error", 500);
   }
 }
