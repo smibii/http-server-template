@@ -1,69 +1,76 @@
+import { Request, Response } from "express";
 import response from "core/utils/response";
-import http from "http";
 import { isDevelopment } from "core/utils/const";
+
+/* -------------------------------------------------------------------------- */
+/*                                Type Definitions                            */
+/* -------------------------------------------------------------------------- */
 
 export type Methods = "GET" | "POST" | "PUT" | "DELETE" | "OPTIONS";
 export type DataShape = Record<string, string>;
-export type Data = Record<string, any>;
+export type Data = { [key: string]: any; endpoint: Record<string, any> };
 
+/* -------------------------------------------------------------------------- */
+/*                                Data Extractor                              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Validates and extracts JSON body data from an Express request.
+ * Replaces the manual http parsing logic from the old version.
+ */
 export async function fetchData(
-  req: http.IncomingMessage,
-  res: http.ServerResponse,
+  req: Request,
+  res: Response,
   requiredData: DataShape = {},
   optionalData: DataShape = {}
 ): Promise<Data> {
-  if (req.headers["content-type"] !== "application/json") {
+  if (!req.is("application/json")) {
     response.error(res, "Content-Type must be application/json");
     throw new Error("Invalid Content-Type");
   }
 
-  try {
-    const body = await new Promise<string>((resolve, reject) => {
-      let data = "";
-      req.on("data", chunk => (data += chunk));
-      req.on("end", () => resolve(data));
-      req.on("error", reject);
-    });
-
-    const jsonData = JSON.parse(body);
-    const result: Data = {};
-
-    const validateKeys = (schema: DataShape, isRequired: boolean) => {
-      for (const key in schema) {
-        const expectedType = schema[key];
-        const value = jsonData[key];
-
-        if (value === undefined) {
-          if (isRequired) {
-            response.error(res, `Missing required key: ${key}`);
-            throw new Error(`Missing required key: ${key}`);
-          }
-          continue;
-        }
-
-        if (typeof value !== expectedType) {
-          response.error(
-            res,
-            `${isRequired ? "Required" : "Optional"} key '${key}' has invalid type (${typeof value}); expected (${expectedType})`
-          );
-          throw new Error(`Invalid type for ${key}: expected ${expectedType}, got ${typeof value}`);
-        }
-
-        result[key] = value;
-      }
-    };
-
-    validateKeys(requiredData, true);
-    validateKeys(optionalData, false);
-
-    return result;
-  } catch (err) {
-    if (err instanceof SyntaxError) {
-      response.error(res, "Invalid JSON body");
-    }
-    throw err;
+  const jsonData = req.body;
+  if (typeof jsonData !== "object" || jsonData === null) {
+    response.error(res, "Invalid JSON body");
+    throw new Error("Invalid JSON body");
   }
+
+  const result: Data = { endpoint: {} };
+
+  const validateKeys = (schema: DataShape, isRequired: boolean) => {
+    for (const key in schema) {
+      const expectedType = schema[key];
+      const value = jsonData[key];
+
+      if (value === undefined) {
+        if (isRequired) {
+          response.error(res, `Missing required key: ${key}`);
+          throw new Error(`Missing required key: ${key}`);
+        }
+        continue;
+      }
+
+      if (typeof value !== expectedType) {
+        response.error(
+          res,
+          `${isRequired ? "Required" : "Optional"} key '${key}' has invalid type (${typeof value}); expected (${expectedType})`
+        );
+        throw new Error(`Invalid type for ${key}: expected ${expectedType}, got ${typeof value}`);
+      }
+
+      result[key] = value;
+    }
+  };
+
+  validateKeys(requiredData, true);
+  validateKeys(optionalData, false);
+
+  return result;
 }
+
+/* -------------------------------------------------------------------------- */
+/*                               Accesspoint Class                            */
+/* -------------------------------------------------------------------------- */
 
 export type AccesspointOptions = {
   local: string | RegExp;
@@ -106,12 +113,16 @@ export class Accesspoint {
   }
 }
 
-type handlerType = (req: http.IncomingMessage, res: http.ServerResponse, data: Data) => void;
+/* -------------------------------------------------------------------------- */
+/*                               Endpoint Class                               */
+/* -------------------------------------------------------------------------- */
+
+type HandlerType = (req: Request, res: Response, data: Data) => void | Promise<void>;
 
 export type EndpointOptions = {
   method: Methods;
   endpoint: string | RegExp;
-  handler: handlerType;
+  handler: HandlerType;
   requiredData?: Record<string, any>;
   optionalData?: Record<string, any>;
   noData?: boolean;
@@ -121,7 +132,7 @@ export type EndpointOptions = {
 export class Endpoint {
   public method: Methods;
   public endpoint: string | RegExp;
-  public handler: handlerType;
+  public handler: HandlerType;
   public customOptions: Record<string, any>;
   public requiredData: Record<string, any>;
   public optionalData: Record<string, any>;
@@ -137,13 +148,8 @@ export class Endpoint {
     this.noData = options.noData || false;
   }
 
-  public async extractData(
-    req: http.IncomingMessage,
-    res: http.ServerResponse
-  ): Promise<Data> {
-    if (this.noData) {
-      return {};
-    }
+  public async extractData(req: Request, res: Response): Promise<Data> {
+    if (this.noData) return { endpoint: {} };
     return await fetchData(req, res, this.requiredData, this.optionalData);
   }
 }
