@@ -73,20 +73,20 @@ export async function fetchData(
 /* -------------------------------------------------------------------------- */
 
 export type AccesspointOptions = {
-  local: string | RegExp;
-  prod: string | RegExp;
+  path: string | RegExp;
+  subdomain?: string | RegExp | undefined;
   ignoreUrls?: string[];
 };
 
 export class Accesspoint {
-  public local: string | RegExp;
-  public prod: string | RegExp;
+  public path: string | RegExp;
+  public subdomain: string | RegExp | undefined;
   public endpoints: Map<Methods, Endpoint[]> = new Map();
   public ignoreUrls: string[];
 
   constructor(options: AccesspointOptions) {
-    this.local = options.local;
-    this.prod = options.prod;
+    this.path = options.path;
+    this.subdomain = options.subdomain;
     this.ignoreUrls = options.ignoreUrls || [];
   }
 
@@ -108,8 +108,8 @@ export class Accesspoint {
 
   public getBaseUrl(): string {
     return isDevelopment
-      ? typeof this.local === "string" ? this.local : "/"
-      : typeof this.prod === "string" ? this.prod : "/";
+      ? typeof this.path === "string" ? this.path : "/"
+      : typeof this.subdomain === "string" ? this.subdomain : "/";
   }
 }
 

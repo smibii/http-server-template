@@ -10,7 +10,7 @@ import * as registry from "registy";
 import { Accesspoint, Data, Endpoint, Methods } from "core/utils/accesspoint";
 
 // ---------------------- Setup Express ----------------------
-const port: number = getConst<number>(serviceConstants.server.port);
+const port = getConst<number>(serviceConstants.server.port);
 const app = express();
 
 app.use(cors());
@@ -79,24 +79,24 @@ export async function handleRequest(req: Request, res: Response): Promise<void> 
       }
 
       const subdomainMatch =
-        !accesspoint.prod ||
-        accesspoint.prod === "" ||
-        (accesspoint.prod instanceof RegExp
-          ? accesspoint.prod.test(subDomain)
-          : accesspoint.prod === subDomain);
+        !accesspoint.subdomain ||
+        accesspoint.subdomain === "" ||
+        (accesspoint.subdomain instanceof RegExp
+          ? accesspoint.subdomain.test(subDomain)
+          : accesspoint.subdomain === subDomain);
 
       let urlMatch: boolean;
       let matchedPrefix = "";
 
-      if (!accesspoint.local || accesspoint.local === "") {
+      if (!accesspoint.path || accesspoint.path === "") {
         urlMatch = true;
-      } else if (accesspoint.local instanceof RegExp) {
-        const match = url.match(accesspoint.local);
+      } else if (accesspoint.path instanceof RegExp) {
+        const match = url.match(accesspoint.path);
         urlMatch = !!match;
         if (match) matchedPrefix = match[0];
       } else {
-        urlMatch = url.startsWith(accesspoint.local);
-        if (urlMatch) matchedPrefix = accesspoint.local;
+        urlMatch = url.startsWith(accesspoint.path);
+        if (urlMatch) matchedPrefix = accesspoint.path;
       }
 
       if (!subdomainMatch && !urlMatch) continue;
@@ -140,7 +140,7 @@ app.all(/.*/, async (req: any, res: any) => {
   await handleRequest(req, res);
 });
 
-app.listen(port, () => {
+app.listen(port, async () => {
   const interfaces = os.networkInterfaces();
   let localIp = "";
 
@@ -159,8 +159,8 @@ app.listen(port, () => {
     process.exit(1);
   }
 
-  logger.info("Registering access points...");
+  logger.info("Registering accesspoints...");
   registry.registerAll();
 
-  logger.info(`🚀 Express server with CORS running at http://${localIp}:${port}`);
+  logger.info(`🚀 Express server with CORS running at http://${isDevelopment ? "localhost" : localIp}:${port}`);
 });

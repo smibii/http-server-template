@@ -11,7 +11,7 @@ export function registerAll() {
 
 // Register and logging logic
 function register(accesspoint: Accesspoint) {
-    logger.info(`Registered accesspoint at local: ${getStringified(accesspoint.local)} prod: ${getStringified(accesspoint.prod || null)}`);
+    logger.info(`Registered accesspoint at local: ${getStringified(accesspoint.path)} build: ${getStringified(accesspoint.subdomain || null)}`);
     logger.info(` - with ${accesspoint.endpoints.size} methods.`);
     accesspoint.endpoints.forEach((endpoints, method) => {
         logger.info(`   - ${method}: ${endpoints.length} endpoints.`);

@@ -7,7 +7,7 @@ export const serviceConstants = {
     "server": {
         "port": {
             "local": 8080,
-            "production": 80
+            "build": 80
         }
     }
 };

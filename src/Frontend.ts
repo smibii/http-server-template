@@ -7,8 +7,8 @@ const indexFile = path.join(publicDir, "index.html");
 
 export function register(): Accesspoint {
     const ap = new Accesspoint({
-        local: "/",
-        prod: null
+        path: "/",
+        subdomain: null
     });
 
     ap.addEndpoint(
