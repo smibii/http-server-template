@@ -4,6 +4,13 @@ A simple and extensible Express server template with dynamic endpoints and acces
 
 ---
 
+## Project name & author
+
+**Project:** Http Server Template
+**Author:** SMIBII
+
+---
+
 ## Features
 
 * Dynamic endpoint matching with URL parameters
@@ -39,53 +46,84 @@ npm i
 npm run start
 ```
 
-The server will log all registered accesspoints and available endpoints.
-**Accesspoints in development:** `http://localhost:PORT/accesspoint`
+**Accesspoints in development:**
 
-Frontend files in `/public` are served automatically.
+```
+http://localhost:<PORT>/<accesspoint>
+```
+
+Frontend static files under `/public` are served automatically.
 
 ---
 
 ## Building the Project
 
 ```bash
-# Compile TypeScript and adjust paths
+# Compile TypeScript and handle aliases
 npm run build
 ```
 
-This generates the build output in the `build` directory and handles static files and environment variables.
+Build output will be placed into the configured output directory (commonly `build/`). The build script runs `tsc` and `tsc-alias` to rewrite path aliases.
 
 ---
 
-## Build and Run
+## Build and Run (Production)
 
 ```bash
-# Build the project and start the server
+# Build and then start the server
 npm run build:start
 ```
 
-This is a combination of compiling TypeScript, running `tsc-alias` for path aliases, and starting the server automatically.
-**Accesspoints in production:** `http://accesspoint.DOMAIN` (using subdomains if configured)
+**Accesspoints in production:**
+Expose accesspoints via subdomains or domain routing, e.g.:
+
+```
+http://<accesspoint>.<your-domain>/
+```
+
+(If you prefer domain/path routing in production, configure reverse proxy/NGINX accordingly.)
 
 ---
 
-## Project Structure
+## Project structure (checked against repo; please confirm)
+
+> I inspected your repository root and `src/` folder. Below is the structure I built from that inspection and from the code snippets you shared. If anything differs (extra folders, different filenames), paste `tree -a` or `ls -R` and I’ll update the README to match exactly.
 
 ```
 .
-├─ core/
-│  ├─ app.ts           # Logger and core app utilities
-│  ├─ utils/
-│  │  ├─ accesspoint.ts # Endpoint and accesspoint helpers
-│  │  └─ response.ts   # Response helper functions
-├─ registry/           # Accesspoint registry logic
-├─ public/             # Frontend static files (served automatically)
-├─ API/                # Example API accesspoint
-├─ Auth/               # Authentication accesspoint
-├─ Frontend/           # Frontend accesspoint
-├─ src/                # Main server entry
-└─ package.json
+├── .gitattributes
+├── .gitignore
+├── README.md
+├── build.bat
+├── config.toml
+├── nodemon.json
+├── package.json
+├── tsconfig.json
+├── tslint.json
+├── src/
+│   ├── index.ts                     # Main entry: express setup, request router & server start
+│   ├── registry/
+│   │   └── index.ts                 # registry.registerAll and register logic
+│   ├── core/
+│   │   ├── app.ts                   # logger and app-level utilities
+│   │   └── utils/
+│   │       ├── accesspoint.ts       # Accesspoint / Endpoint / Endpoint matching logic
+│   │       └── response.ts          # Standardized response helpers (sendFile, error, success)
+│   ├── API/                         # Example API accesspoint
+│   │   └── index.ts
+│   ├── Auth/                        # Example Auth accesspoint
+│   │   └── index.ts
+│   ├── Frontend/                    # Frontend accesspoint (serves public/ & index fallback)
+│   │   └── index.ts
+│   └── public/                      # (not always inside src, but repository contains public/)
+│       └── index.html               # Frontend entry (example)
+└── public/                          # Static assets served in dev/prod (if present)
 ```
+
+> Notes:
+>
+> * Some files may live at `src/core/utils/…` or similar. The README lists the locations used by the code you shared.
+> * If you prefer the `public/` folder inside `src/` or at repository root, tell me which and I’ll update the tree.
 
 ---
 
@@ -93,52 +131,56 @@ This is a combination of compiling TypeScript, running `tsc-alias` for path alia
 
 ### Accesspoints & Endpoints
 
-Each accesspoint can register multiple endpoints with:
+Accesspoints group endpoints and can define:
 
-* HTTP method (GET, POST, etc.)
-* Path string or RegExp
-* Optional `noData` for static endpoints
-* Data extraction function for request data
-* Handler function for sending responses
+* `path` prefix or `RegExp` for path matching
+* optional `subdomain` (string or `RegExp`)
+* `ignoreUrls` to exclude certain request prefixes
+* `endpoints` bucketed by HTTP method (GET/POST/...) where each `Endpoint`:
+
+  * has an `endpoint` (string or `RegExp`)
+  * may set `noData` if it doesn’t require extraction
+  * provides `extractData(req, res)` to gather request-specific data
+  * provides `handler(req, res, data)` which executes the response
 
 Example:
 
 ```ts
 new Endpoint({
-    method: "GET",
-    endpoint: "/hello/<name>",
-    handler: async (req, res, data) => {
-        res.json({ message: `Hello ${data.endpoint.name}` });
-    }
+  method: "GET",
+  endpoint: "/hello/<name>",
+  handler: async (req, res, data) => {
+    res.json({ message: `Hello ${data.endpoint.name}` });
+  }
 }).append(accesspoint);
 ```
 
-### Frontend
+---
 
-The frontend accesspoint serves:
+## Frontend
 
-* All static files under `/public`
-* `index.html` for single-page application fallback
+* Static assets under `/public` are served automatically.
+* The `Frontend` accesspoint serves static files and falls back to `public/index.html` for SPA routing.
 
 ---
 
-## Logging
+## Logging & Diagnostics
 
 The server logs:
 
-* Incoming requests with method, URL, IP, and user-agent
-* Registered accesspoints and endpoints
+* Every incoming request (method, URL, client IP, user-agent)
+* Registered accesspoints and endpoints (on startup)
 * Ignored URLs per accesspoint
 * Errors and internal server issues
 
 ---
 
-## Notes
+## Notes & Tips
 
-* Ensure Node.js v21+ is installed.
-* Run `npm i` before starting to install dependencies.
-* For dev mode, use `npm run start` — accesspoints are accessible at `/accesspoint`.
-* For production, build first with `npm run build`, then start with `npm run build:start` — accesspoints are accessible as `accesspoint.DOMAIN`.
+* Node v21+ is required; the project checks the Node major version and exits if the version is too old.
+* Run `npm i` before starting.
+* Use `call` in Windows batch scripts when invoking `tsc-alias` from a `.bat` to avoid control flow being replaced (e.g. `call tsc -p .` / `call tsc-alias`).
+* For production, use a reverse proxy (NGINX, Caddy, Traefik) to map `accesspoint.your-domain.com` to the server and handle TLS.
 
 ---
 
