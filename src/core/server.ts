@@ -13,15 +13,34 @@ import { Accesspoint, Data, Endpoint, Methods } from "core/utils/accesspoint";
 const port = getConst<number>(serviceConstants.server.port);
 const app = express();
 
-app.use(cors());
-app.use(express.json());
-
-app.use((req: any, res: any, next: any) => {
-  const ip = req.socket.remoteAddress || "unknown";
-  const ua = req.headers["user-agent"] || "unknown";
-  logger.info(`Received ${req.method} ${req.url} from ${ip} | UA: ${ua}`);
-  next();
+// Check if port is in use
+import net from "net";
+const server = net.createServer();
+server.once("error", (err: any) => {
+  if (err.code === "EADDRINUSE") {
+    logger.error(`Port ${port} is already in use. Please free the port and try again.`);
+    process.exit(1);
+  }
 });
+server.once("listening", () => {
+  server.close();
+  app.use(cors());
+  app.use(express.json());
+
+  app.use((req: any, res: any, next: any) => {
+    const ip = req.socket.remoteAddress || "unknown";
+    const ua = req.headers["user-agent"] || "unknown";
+    logger.info(`Received ${req.method} ${req.url} from ${ip} | UA: ${ua}`);
+    next();
+  });
+
+  app.all(/.*/, async (req: any, res: any) => {
+    await handleRequest(req, res);
+  });
+
+  app.listen(port, startServer);
+});
+server.listen(port);
 
 export function matchEndpoint(
   endpoints: Endpoint[],
@@ -137,11 +156,7 @@ export async function handleRequest(req: Request, res: Response): Promise<void> 
   }
 }
 
-app.all(/.*/, async (req: any, res: any) => {
-  await handleRequest(req, res);
-});
-
-app.listen(port, async () => {
+const startServer = async () => {
   const interfaces = os.networkInterfaces();
   let localIp = "";
 
@@ -164,7 +179,7 @@ app.listen(port, async () => {
   registry.registerAll();
 
   logger.info(`Express server with CORS running at http://${isDevelopment ? "localhost" : localIp}:${port}`);
-});
+};
 
 // Check if node version is over 21
 const nodeVersion = process.versions.node;
