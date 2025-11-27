@@ -85,48 +85,6 @@ http://<accesspoint>.<your-domain>/
 
 ---
 
-## Project structure (checked against repo; please confirm)
-
-> I inspected your repository root and `src/` folder. Below is the structure I built from that inspection and from the code snippets you shared. If anything differs (extra folders, different filenames), paste `tree -a` or `ls -R` and I’ll update the README to match exactly.
-
-```
-.
-├── .gitattributes
-├── .gitignore
-├── README.md
-├── build.bat
-├── config.toml
-├── nodemon.json
-├── package.json
-├── tsconfig.json
-├── tslint.json
-├── src/
-│   ├── index.ts                     # Main entry: express setup, request router & server start
-│   ├── registry/
-│   │   └── index.ts                 # registry.registerAll and register logic
-│   ├── core/
-│   │   ├── app.ts                   # logger and app-level utilities
-│   │   └── utils/
-│   │       ├── accesspoint.ts       # Accesspoint / Endpoint / Endpoint matching logic
-│   │       └── response.ts          # Standardized response helpers (sendFile, error, success)
-│   ├── API/                         # Example API accesspoint
-│   │   └── index.ts
-│   ├── Auth/                        # Example Auth accesspoint
-│   │   └── index.ts
-│   ├── Frontend/                    # Frontend accesspoint (serves public/ & index fallback)
-│   │   └── index.ts
-│   └── public/                      # (not always inside src, but repository contains public/)
-│       └── index.html               # Frontend entry (example)
-└── public/                          # Static assets served in dev/prod (if present)
-```
-
-> Notes:
->
-> * Some files may live at `src/core/utils/…` or similar. The README lists the locations used by the code you shared.
-> * If you prefer the `public/` folder inside `src/` or at repository root, tell me which and I’ll update the tree.
-
----
-
 ## Usage
 
 ### Accesspoints & Endpoints
