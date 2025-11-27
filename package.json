@@ -10,7 +10,7 @@
   "scripts": {
     "start": "set \"NODE_ENV=development\" && nodemon",
     "start:build": "npm run build && cd build && node build/core/server.js",
-    "build": "set \"NODE_ENV=production\" && tsc -p . && tsc-alias"
+    "build": "build.bat"
   },
   "dependencies": {
     "@types/cors": "^2.8.19",
