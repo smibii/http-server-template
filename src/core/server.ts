@@ -131,6 +131,7 @@ export async function handleRequest(req: Request, res: Response): Promise<void> 
 
     await matchedEndpoint.handler(req, res, data);
   } catch (err) {
+    console.error(err);
     logger.error(`Error handling request: ${(err as Error).message}`);
     response.error(res, "internal_server_error", 500);
   }
@@ -164,3 +165,11 @@ app.listen(port, async () => {
 
   logger.info(`Express server with CORS running at http://${isDevelopment ? "localhost" : localIp}:${port}`);
 });
+
+// Check if node version is over 21
+const nodeVersion = process.versions.node;
+const majorVersion = parseInt(nodeVersion.split(".")[0], 10);
+if (majorVersion < 21) {
+  logger.error("Node.js version 21 or higher is required to run this application.");
+  process.exit(1);
+}

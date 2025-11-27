@@ -2,7 +2,7 @@ import http from "http";
 import { logger } from "../app";
 import fs from "fs";
 
-function createHeader(res: http.ServerResponse, code: number = 200, headers?: http.OutgoingHttpHeaders | http.OutgoingHttpHeader[]): void {
+export function createHeader(res: http.ServerResponse, code: number = 200, headers?: http.OutgoingHttpHeaders | http.OutgoingHttpHeader[]): void {
   res.writeHead(code, {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -11,8 +11,9 @@ function createHeader(res: http.ServerResponse, code: number = 200, headers?: ht
   });
 }
 
-function sendJson(res: http.ServerResponse, data: any, code: number = 200): void {
-  if (typeof data !== "object") {
+export function sendJson(res: http.ServerResponse, data: any, code: number = 200): void {
+  const isString = typeof data === "string";
+  if (isString) {
     logger.error("Data to send is not an object. Converting to JSON.");
     data = { message: data };
   }
@@ -21,16 +22,16 @@ function sendJson(res: http.ServerResponse, data: any, code: number = 200): void
   res.end(JSON.stringify(data));
 }
 
-function result(res: http.ServerResponse, data: any, code: number = 200): void {
+export function result(res: http.ServerResponse, data: any, code: number = 200): void {
   sendJson(res, data, code);
 }
 
-function error(res: http.ServerResponse, message: string, code: number = 400): void {
-  logger.error(`Error: ${message}`);
+export function error(res: http.ServerResponse, message: string | Object, code: number = 400): void {
+  logger.error(`Error: ${(typeof message === "string") ? message : JSON.stringify(message)}`);
   result(res, {message, error: true}, code);
 }
 
-function sendFile(res: http.ServerResponse, filePath: string, contentType: string = null): void {
+export function sendFile(res: http.ServerResponse, filePath: string, contentType: string = null): void {
   fs.readFile(filePath, (err: NodeJS.ErrnoException | null, data: Buffer) => {
     if (err) {
       logger.error(`Error reading file ${filePath}: ${err.message}`);
