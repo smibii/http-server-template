@@ -5,13 +5,12 @@ import response from "core/utils/response";
 const publicDir = path.join(__dirname, "../public");
 const indexFile = path.join(publicDir, "index.html");
 
-export function register(): Accesspoint {
-    const ap = new Accesspoint({
-        path: "/",
-        subdomain: null
-    });
+export default class Frontend extends Accesspoint {
+    constructor() {
+        super({
+            path: "/"
+        });
 
-    ap.addEndpoint(
         new Endpoint({
             method: "GET",
             endpoint: /^.*\..+$/,
@@ -20,7 +19,6 @@ export function register(): Accesspoint {
                 const url = req.url || "/";
                 const filePath = path.join(publicDir, url);
                 const ext = path.extname(url).toLowerCase();
-
                 let contentType: string | undefined;
                 switch (ext) {
                     case ".svg": contentType = "image/svg+xml"; break;
@@ -32,22 +30,15 @@ export function register(): Accesspoint {
                     case ".jpeg": contentType = "image/jpeg"; break;
                     default: contentType = "application/octet-stream";
                 }
-
                 response.sendFile(res, filePath, contentType);
-            }
-        })
-    );
+            }}).append(this);
 
-    ap.addEndpoint(
         new Endpoint({
             method: "GET",
             endpoint: /.*/,
             noData: true,
             handler(req, res, data) {
                 response.sendFile(res, indexFile, "text/html");
-            }
-        })
-    );
-
-    return ap;
+            }}).append(this);
+    }
 }

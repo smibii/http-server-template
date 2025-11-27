@@ -162,5 +162,5 @@ app.listen(port, async () => {
   logger.info("Registering accesspoints...");
   registry.registerAll();
 
-  logger.info(`🚀 Express server with CORS running at http://${isDevelopment ? "localhost" : localIp}:${port}`);
+  logger.info(`Express server with CORS running at http://${isDevelopment ? "localhost" : localIp}:${port}`);
 });

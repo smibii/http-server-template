@@ -2,22 +2,10 @@ import { Request, Response } from "express";
 import response from "core/utils/response";
 import { isDevelopment } from "core/utils/const";
 
-/* -------------------------------------------------------------------------- */
-/*                                Type Definitions                            */
-/* -------------------------------------------------------------------------- */
-
 export type Methods = "GET" | "POST" | "PUT" | "DELETE" | "OPTIONS";
 export type DataShape = Record<string, string>;
 export type Data = { [key: string]: any; endpoint: Record<string, any> };
 
-/* -------------------------------------------------------------------------- */
-/*                                Data Extractor                              */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Validates and extracts JSON body data from an Express request.
- * Replaces the manual http parsing logic from the old version.
- */
 export async function fetchData(
   req: Request,
   res: Response,
@@ -68,10 +56,6 @@ export async function fetchData(
   return result;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                               Accesspoint Class                            */
-/* -------------------------------------------------------------------------- */
-
 export type AccesspointOptions = {
   path: string | RegExp;
   subdomain?: string | RegExp | undefined;
@@ -113,10 +97,6 @@ export class Accesspoint {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/*                               Endpoint Class                               */
-/* -------------------------------------------------------------------------- */
-
 type HandlerType = (req: Request, res: Response, data: Data) => void | Promise<void>;
 
 export type EndpointOptions = {
@@ -151,5 +131,9 @@ export class Endpoint {
   public async extractData(req: Request, res: Response): Promise<Data> {
     if (this.noData) return { endpoint: {} };
     return await fetchData(req, res, this.requiredData, this.optionalData);
+  }
+
+  public append(accesspoint: Accesspoint) {
+    accesspoint.addEndpoint(this);
   }
 }

@@ -3,15 +3,15 @@ import { logger } from "core/app";
 
 export const registry: Set<Accesspoint> = new Set<Accesspoint>();
 
-import * as Frontend from "Frontend";
+import Frontend from "Frontend";
 
 export function registerAll() {
-    register(Frontend.register());
+    register(new Frontend());
 }
 
 // Register and logging logic
 function register(accesspoint: Accesspoint) {
-    logger.info(`Registered accesspoint at local: ${getStringified(accesspoint.path)} build: ${getStringified(accesspoint.subdomain || null)}`);
+    logger.info(`Registered accesspoint at path: ${getStringified(accesspoint.path)} subdomain: ${getStringified(accesspoint.subdomain || null)}`);
     logger.info(` - with ${accesspoint.endpoints.size} methods.`);
     accesspoint.endpoints.forEach((endpoints, method) => {
         logger.info(`   - ${method}: ${endpoints.length} endpoints.`);

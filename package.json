@@ -8,7 +8,7 @@
   },
   "license": "MIT",
   "scripts": {
-    "start": "set \"NODE_ENV=development\" && nodemon --watch 'src/**/*.ts' --ignore 'src/client.ts' --exec npx ts-node -r tsconfig-paths/register src/core/server.ts",
+    "start": "set \"NODE_ENV=development\" && nodemon",
     "start:build": "npm run build && cd build && node build/core/server.js",
     "build": "set \"NODE_ENV=production\" && tsc -p . && tsc-alias"
   },
