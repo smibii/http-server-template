@@ -5,13 +5,12 @@ import cors from "cors";
 
 import { logger } from "core/app";
 import response from "core/utils/response";
-import { getConst, isDevelopment } from "core/utils/const";
-import { serviceConstants } from "core/constants/service";
 import * as registry from "registy";
 import { Accesspoint, Data, Endpoint, Methods } from "core/utils/accesspoint";
+import { configGet, isDevelopment } from "./utils/config";
 
 // ---------------------- Setup Express ----------------------
-const port = getConst<number>(serviceConstants.server.port);
+const port = configGet('port');
 const app = express();
 
 export function matchEndpoint(
@@ -193,6 +192,6 @@ else checkIfPortIsInUse()
 const nodeVersion = process.versions.node;
 const majorVersion = parseInt(nodeVersion.split(".")[0], 10);
 if (majorVersion < 21) {
-  logger.error("Node.js version 21 or higher is required to run this application.");
+  logger.error("Node.js version 21 or higher is required to run this application. Currently using " + nodeVersion);
   process.exit(1);
 }

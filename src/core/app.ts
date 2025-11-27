@@ -1,6 +1,6 @@
-import { serviceConstants } from "core/constants/service";
 import dotenv from "dotenv";
 import winston from "winston";
+import { configGet } from "./utils/config";
 
 export const serverStartTime: Date = new Date();
 dotenv.config();
@@ -8,7 +8,7 @@ dotenv.config();
 function loggerOptions(isMod: boolean = false) {
   return {
     format: winston.format.combine(
-      winston.format.label({ label: serviceConstants.service.name }),
+      winston.format.label({ label: configGet<string>('name') }),
       winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
       winston.format.printf(info => {
         return `${info.timestamp} [${info.label}] ${info.level}: ${info.message}`;

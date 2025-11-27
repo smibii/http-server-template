@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import response from "core/utils/response";
-import { isDevelopment } from "core/utils/const";
+import { isDevelopment } from "./config";
 
 export type Methods = "GET" | "POST" | "PUT" | "DELETE" | "OPTIONS";
 export type DataShape = Record<string, string>;

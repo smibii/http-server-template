@@ -1,20 +1,17 @@
 import { parse, stringify } from 'smol-toml';
 import path from 'path';
 import fs from 'fs';
-import { logger } from 'core/app';
 
 const NodeRoot = process.cwd();
 
 function updateConfigFile<T>(relativePath: string, config: T): void {
     const fullPath = path.join(NodeRoot, relativePath + '.toml');
-    logger.info(`Updating TOML file at: ${fullPath}`);
     const fileContents = stringify(config as any);
     fs.writeFileSync(fullPath, fileContents, 'utf-8');
 }
 
 export function parseTomlFile<T>(relativePath: string, defaultContent: T): T {
     const fullPath = path.join(NodeRoot, relativePath + '.toml');
-    logger.info(`Parsing TOML file at: ${fullPath}`);
     if (!fs.existsSync(fullPath)) updateConfigFile(relativePath, defaultContent);
     const fileContents = fs.readFileSync(fullPath, 'utf-8');
     const { config, hasMissMatch } = validateConfig(parse(fileContents) as T, defaultContent);
