@@ -6,6 +6,14 @@ if exist build (
     rmdir /s /q build
 )
 
+echo checking if node_modules/smol-toml/dist/error.d.ts exists...
+if exist node_modules\smol-toml\dist\error.d.ts (
+    echo Patching smol-toml error.d.ts...
+    powershell -Command "(Get-Content node_modules\smol-toml\dist\error.d.ts) -replace 'type TomlErrorOptions = ErrorOptions & {', 'type TomlErrorOptions = {' | Set-Content node_modules\smol-toml\dist\error.d.ts"
+) else (
+    echo smol-toml error.d.ts not found. Skipping patch...
+)
+
 echo Setting NODE_ENV to production...
 set NODE_ENV=production
 
