@@ -1,8 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 
+const NodeRoot = process.cwd();
+
 export class Storage {
-  private readonly BASE_STORAGE_PATH = path.join(__dirname, 'storage');
+  private readonly BASE_STORAGE_PATH = path.join(NodeRoot, 'storage');
   private storagePath: string;
   private storage: Record<string, any> = {};
   private defaults: Record<string, any>;

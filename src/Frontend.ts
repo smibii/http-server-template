@@ -2,7 +2,9 @@ import { Accesspoint, Endpoint } from "core/utils/accesspoint";
 import path from "path";
 import response from "core/utils/response";
 
-const publicDir = path.join(__dirname, "../public");
+const NodeRoot = process.cwd();
+
+const publicDir = path.join(NodeRoot, "public");
 const indexFile = path.join(publicDir, "index.html");
 
 export default class Frontend extends Accesspoint {
