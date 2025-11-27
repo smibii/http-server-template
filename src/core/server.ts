@@ -101,7 +101,7 @@ export async function handleRequest(req: Request, res: Response): Promise<void> 
 
       if (!subdomainMatch && !urlMatch) continue;
 
-      if (urlMatch && isDevelopment && matchedPrefix) {
+      if (urlMatch && matchedPrefix) {
         url = url.slice(matchedPrefix.length) || "/";
       }
 

@@ -9,7 +9,7 @@
   "license": "MIT",
   "scripts": {
     "start": "set \"NODE_ENV=development\" && nodemon",
-    "start:build": "npm run build && cd build && node build/core/server.js",
+    "build:start": "npm run build && cd build && node core/server.js",
     "build": "build.bat"
   },
   "dependencies": {
