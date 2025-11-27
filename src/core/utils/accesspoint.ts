@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import response from "core/utils/response";
-import { isDevelopment } from "./config";
+import config from "./config";
 
 export type Methods = "GET" | "POST" | "PUT" | "DELETE" | "OPTIONS";
 export type DataShape = Record<string, string>;
@@ -91,7 +91,7 @@ export class Accesspoint {
   }
 
   public getBaseUrl(): string {
-    return isDevelopment
+    return config.isDevelopment
       ? typeof this.path === "string" ? this.path : "/"
       : typeof this.subdomain === "string" ? this.subdomain : "/";
   }

@@ -7,10 +7,10 @@ import { logger } from "core/app";
 import response from "core/utils/response";
 import * as registry from "registy";
 import { Accesspoint, Data, Endpoint, Methods } from "core/utils/accesspoint";
-import { configGet, isDevelopment } from "./utils/config";
+import config from "./utils/config";
 
 // ---------------------- Setup Express ----------------------
-const port = configGet('port');
+const port = config.get('port');
 const app = express();
 
 export function matchEndpoint(
@@ -149,7 +149,7 @@ const startServer = async () => {
   logger.info("Registering accesspoints...");
   registry.registerAll();
 
-  logger.info(`Express server with CORS running at http://${isDevelopment ? "localhost" : localIp}:${port}`);
+  logger.info(`Express server with CORS running at http://${config.isDevelopment ? "localhost" : localIp}:${port}`);
 };
 
 function checkIfPortIsInUse() {
@@ -185,7 +185,7 @@ function configureAndRunServer() {
   app.listen(port, startServer);
 }
 
-if (isDevelopment) configureAndRunServer();
+if (config.isDevelopment) configureAndRunServer();
 else checkIfPortIsInUse()
 
 // Check if node version is over 21
