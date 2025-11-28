@@ -57,7 +57,9 @@ export async function handleRequest(req: Request, res: Response): Promise<void> 
     let url = (req.path || "/").toLowerCase();
     const method = req.method as Methods;
     const host = req.headers.host || "";
-    const subDomain = host.split(".")[0];
+    
+    const isIp = /^(\d{1,3}\.){3}\d{1,3}$/.test(host) || /^\[?[0-9a-fA-F:]+\]?$/.test(host);
+    const subDomain = isIp ? "" : host.split(".")[0];
 
     let matchedAccesspoint: Accesspoint | null = null;
     let matchedEndpoint: Endpoint | null = null;
@@ -68,12 +70,13 @@ export async function handleRequest(req: Request, res: Response): Promise<void> 
         if (url.startsWith(ignoredUrl)) return;
       }
 
-      const subdomainMatch =
-        !accesspoint.subdomain ||
-        accesspoint.subdomain === "" ||
-        (accesspoint.subdomain instanceof RegExp
-          ? accesspoint.subdomain.test(subDomain)
-          : accesspoint.subdomain === subDomain);
+      const subdomainMatch = isIp
+        ? true
+        : !accesspoint.subdomain ||
+          accesspoint.subdomain === "" ||
+          (accesspoint.subdomain instanceof RegExp
+            ? accesspoint.subdomain.test(subDomain)
+            : accesspoint.subdomain === subDomain);
 
       let urlMatch: boolean;
       let matchedPrefix = "";
