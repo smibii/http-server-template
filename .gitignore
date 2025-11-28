@@ -1,7 +1,7 @@
 .idea
 .vscode
 build
-node_modules
+node_modules/*
 !node_modules/hst-build
 logs
 .env
