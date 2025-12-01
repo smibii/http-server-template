@@ -108,7 +108,7 @@ new Endpoint({
   method: "GET",
   endpoint: "/hello/<name>",
   handler: async (req, res, data) => {
-    res.json({ message: `Hello ${data.endpoint.name}` });
+    result(res, `Hello ${data.endpoint.name}`);
   }
 }).append(accesspoint);
 ```
