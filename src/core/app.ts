@@ -5,7 +5,7 @@ import config from "./utils/config";
 export const serverStartTime: Date = new Date();
 dotenv.config();
 
-function loggerOptions(isMod: boolean = false) {
+function loggerOptions() {
   return {
     format: winston.format.combine(
       winston.format.label({ label: config.get('name') }),
@@ -16,10 +16,9 @@ function loggerOptions(isMod: boolean = false) {
     ),
     transports: [
       new winston.transports.Console(),
-      new winston.transports.File({ filename: 
-        (isMod ? "logs/moderation.log" : "logs/error.log")
-        , level: 
-        (isMod ? "info" : "error")
+      new winston.transports.File({
+        filename: `logs/${serverStartTime}.log`,
+        level: "info"
       }),
       new winston.transports.File({ filename: "logs/combined.log" })
     ]
@@ -27,7 +26,6 @@ function loggerOptions(isMod: boolean = false) {
 }
 
 export const logger = winston.createLogger(loggerOptions());
-export const moderation_logger = winston.createLogger(loggerOptions(true));
 
 process.on("uncaughtException", (error: Error) => {
   logger.error(error.message + error.stack.split("\n")[2]);

@@ -1,22 +1,20 @@
 import { DeepKeyOf, IConfig } from "core/types/config.type";
 import toml from "./toml";
 
-const isDevelopment = process.env.NODE_ENV === "development";
-
 function defaultConfig(): IConfig {
-    const name = 'HTTP Server Template';
-    const port = 8080;
-    return { name, port }
+  const name = 'HTTP Server Template';
+  const port = 8080;
+  return { name, port }
 }
 
-export function get<Key extends DeepKeyOf<IConfig> | undefined, T = any>(
+export function Get<Key extends DeepKeyOf<IConfig> | undefined, T = any>(
   ...args: Key[]
 ): Key extends undefined ? IConfig : T {
   let data: any = toml.parseTomlFile<IConfig>('config', defaultConfig());
   if (!args) return data;
 
   const key = args.join('.');
-  if (!has(key)) {
+  if (!Has(key)) {
     return null;
   }
 
@@ -33,7 +31,7 @@ export function get<Key extends DeepKeyOf<IConfig> | undefined, T = any>(
   return current;
 }
 
-export function has(key: string): boolean {
+export function Has(key: string): boolean {
   const data: any = toml.parseTomlFile<IConfig>('config', defaultConfig());
 
   const parts = key.split('.');
@@ -50,7 +48,6 @@ export function has(key: string): boolean {
 }
 
 export default {
-  isDevelopment,
-  get,
-  has
+  Get,
+  Has
 }
